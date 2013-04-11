@@ -1,14 +1,15 @@
 -module(bakery_distributed).
 -export([manager/2, server/0, create_and_run_manager/3, make_customer/2, create_population/2]).
 -import(fib, [fibo/1]).
-%bakery_distributed:create_and_run_manager(MANAGERHERE, [SERVERSHERE], 30).
+%Run example:
+%bakery_distributed:create_and_run_manager(manager@corlar, [server1@rynite,server2@zeus,server3@spandex], 30).
 
 make_customer(ManagerPid, NumberLeftToSpawn) ->
-    io:fwrite("making customer ~w~n", [NumberLeftToSpawn]),
+    io:fwrite("Making customer ~w~n", [NumberLeftToSpawn]),
     Time = crypto:rand_uniform(0, 1000),
     timer:sleep(Time),
-    io:fwrite("Customer ~w has entered the bakery ^_^ random nubmer is: ~w~n", [NumberLeftToSpawn, Time]),
-    Input = crypto:rand_uniform(1, 50),
+		Input = crypto:rand_uniform(1, 50),
+    io:fwrite(":) Customer ~w has entered the bakery ^_^ and spent: ~w~n", [NumberLeftToSpawn, Input]),
     CustomerObject = [{id, NumberLeftToSpawn}, {input, Input}],
 
     ManagerPid ! {customer, CustomerObject}.
@@ -31,7 +32,7 @@ manager(ServerList, []) ->
 	{server, FreeServer, CustomerServedObject} ->
 	    [ID,Input,Result] = CustomerServedObject,
 	    Output = [element(2,ID), element(2,Input), element(2,Result)],
-	    io:fwrite("M1 Customer ~w with ~w dollars, was given ~w brownies!~n", Output),
+	    io:fwrite("M1 Customer ~w with ~w dollars, was given ~w brownies ^_^~n", Output),
 	    NewServerList = ServerList ++ [FreeServer],
 	    manager(NewServerList, [])
     end;
@@ -47,7 +48,7 @@ manager([], CustomerList) ->
 	{server, FreeServer, CustomerObject} ->
 	    [ID, Input, Result] = CustomerObject,
 	    Output = [element(2, ID), element(2, Input), element(2, Result)],
-	    io:fwrite("M2 Customer ~w with ~w dollars, was given ~w brownies!~n", Output),
+	    io:fwrite("M2 Customer ~w with ~w dollars, was given ~w brownies ^_^~n", Output),
 	    NewServerList = [FreeServer],
 	    manager(NewServerList, NewCustomerList)
     end;
@@ -63,7 +64,7 @@ manager(ServerList, CustomerList) ->
 	{server, FreeServer, CustomerObject} ->
 	    [ID, Input, Result] = CustomerObject,
 	    Output = [element(2, ID), element(2, Input), element(2, Result)],
-	    io:fwrite("M3 Customer ~w with ~w dollars, was given ~w brownies!~n", Output),
+	    io:fwrite("M3 Customer ~w with ~w dollars, was given ~w brownies ^_^~n", Output),
 	    NewServerList = ServerList ++ [FreeServer]
     after 0 ->
 	    NewServerList = ServerList    
@@ -72,7 +73,6 @@ manager(ServerList, CustomerList) ->
     [Server|NewerServerList] = NewServerList,
     [Customer|NewCustomerList] = NextCustomerList,
     [CustomerID,_] = Customer,
-    io:fwrite("Customer ~w is being served by server ~w!~n", [element(2,CustomerID), node(Server)]),
     Server ! {customer, Customer, self()},
     manager(NewerServerList, NewCustomerList).
 
@@ -82,7 +82,7 @@ server() ->
 	{customer, CustomerObject, ManagerPID} ->	    
        
 	    [ID, Input] = CustomerObject,
-	    io:fwrite("Customer ~w, is here on server ~w~n", [element(2, ID),node()]),
+	    io:fwrite("Customer ~w, is being served by server ~w XD~n", [element(2, ID),node()]),
 	    Result = {result, fib:fibo(element(2,Input))},
 	    ServedCustomer = [ID, Input, Result],
 	    ManagerPID ! {server, self(), ServedCustomer}
