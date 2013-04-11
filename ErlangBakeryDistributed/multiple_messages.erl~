@@ -1,3 +1,0 @@
--module(multiple_messages).
--export([multiple_messages/0]).
-

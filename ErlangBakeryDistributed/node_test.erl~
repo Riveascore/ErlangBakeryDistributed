@@ -1,6 +1,0 @@
--module(node_test).
--export(bakery, [func/0]).
--import(
-
-func() ->
-    global(register_name
