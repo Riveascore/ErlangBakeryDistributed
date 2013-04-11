@@ -6,10 +6,10 @@ make_customer(ManagerPid, NumberLeftToSpawn) ->
     Time = crypto:rand_uniform(0, 1000),
     timer:sleep(Time),
     io:fwrite("Customer ~w has entered the bakery ^_^ random nubmer is: ~w~n", [NumberLeftToSpawn, Time]),
-    Input = crypto:rand_uniform(50),
+		Input = crypto:rand_uniform(1, 50),
     CustomerObject = [{id, NumberLeftToSpawn}, {input, Input}],
-
-    ManagerPid ! {customer, CustomerObject},
+    
+    ManagerPid ! {customer, CustomerObject}.
 
 create_population(0, ManagerPid) ->
     ManagerPid;
@@ -38,7 +38,7 @@ manager([], CustomerList) ->
     receive
 	{server, FreeServer, CustomerObject} ->
 	    [ID, Input, Result] = CustomerObject,
-	    Output = [lists:nth(2, ID), lists:nth(2, Input), lists:nth(2, Result)],
+			Output = [element(2,ID), element(2,Input), element(2,Result)],
 	    io:fwrite("Customer ~w with ~w dollars, was given ~w brownies!~n", Output),
 	    NewServerList = [FreeServer],
 	    manager(NewServerList, NewCustomerList)
@@ -53,14 +53,16 @@ manager(ServerList, CustomerList) ->
 
     [Server|NewServerList] = ServerList,
     [Customer|NewCustomerList] = NextCustomerList,
-    io:fwrite("Customer ~w is being served by server ~w!~n", [Customer, Server]),
-    %spawn(bakery_distributed, serve, [Server, Customer, self()]),
+
     Server ! {customer, Customer, self()},
 
     receive
 	{server, FreeServer, CustomerObject} ->
-	    [ID, Input, Result] = CustomerObject,
-	    Output = [lists:nth(2, ID), lists:nth(2, Input), lists:nth(2, Result)],
+			ID = lists:nth(1, CustomerObject),
+			Input = lists:nth(2, CustomerObject),
+			Result = lists:nth(3, CustomerObject),
+
+	    Output = [element(2, ID), element(2, Input), element(2, Result)],
 	    io:fwrite("Customer ~w with ~w dollars, was given ~w brownies!~n", Output),
 	    NewerServerList = lists:append(NewServerList, [FreeServer]),
 	    NewerServerList = NewServerList ++ [FreeServer],
@@ -73,9 +75,13 @@ server() ->
 
     receive
 	{customer, CustomerObject, ManagerPID} ->
-	    [ID|Input] = CustomerObject,
-	    Result = {result, fib:fibo(Input)},
+			ID = lists:nth(1, CustomerObject),
+			io:fwrite("Customer ~w is being served by server ~w!~n", [ID, self()]),
+			Input = lists:nth(2, CustomerObject),
+			InputFibNumber = element(2, Input),
+	    Result = {result, fib:fibo(InputFibNumber)},
 	    ServedCustomer = [ID, Input, Result],
+			
 	    ManagerPID ! {server, self(), ServedCustomer}
     end,
     server().
